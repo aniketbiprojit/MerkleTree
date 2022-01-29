@@ -1,12 +1,30 @@
+import assert from 'assert'
+import { ethers } from 'ethers'
 import { MerkleTree } from './MerkleTree'
 
-const tree = new MerkleTree<number>(
-	[1, 2, 3, 4, 5, 6, 7],
-	(a) => a % 256,
-	(a, b) => a + b
+const data = Array.from({ length: 25 }, (_, idx) => {
+	return [1, 20, Math.floor(1000), ethers.constants.AddressZero, 2 + idx, 2 * 30 * 24 * 3600]
+})
+
+const encoded = data.map((data) =>
+	ethers.utils.defaultAbiCoder.encode(['uint256', 'uint256', 'uint256', 'address', 'uint256', 'uint256'], data)
 )
 
-for (let index = 0; index < tree.postOrderNodes.length; index++) {
-	const element = tree.postOrderNodes[index]
-	console.log(element.map((elem) => elem.value))
+const hashing = (a: string): string => ethers.utils.keccak256(a)
+const summation = (a: string, b: string): string => ethers.BigNumber.from(a).add(b).toHexString()
+const tree = new MerkleTree({ leafValues: encoded, hashing, summation })
+
+console.log('depth:', tree.depth())
+// console.log(`tree:\n${tree.postOrderNodes.map((levels) => levels.map((node) => node.position).join(', ')).join('\n')}`)
+for (let index = 0; index < encoded.length; index++) {
+	const leafToProve = encoded[index]
+	const proof = tree.getInclusionProof(leafToProve)
+
+	let updatedRoot = hashing(leafToProve)
+	for (let idx = 0; idx < proof.length; idx += 1) {
+		updatedRoot = hashing(summation(updatedRoot, proof[idx].hash))
+	}
+	console.log('index:', index)
+
+	assert.equal(tree.root().hash, updatedRoot)
 }
