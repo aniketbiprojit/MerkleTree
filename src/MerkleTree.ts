@@ -103,6 +103,7 @@ export class MerkleTree<T> {
 		MerkleSetupValues.hashing = hashing
 		MerkleSetupValues.summation = summation
 
+		leafValues = Array.from(new Set(leafValues))
 		if (leafValues.length % 2 !== 0) {
 			leafValues.push(leafValues[leafValues.length - 1])
 		}

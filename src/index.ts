@@ -3,7 +3,7 @@ import { ethers } from 'ethers'
 import { MerkleTree } from './MerkleTree'
 
 const data = Array.from({ length: 25 }, (_, idx) => {
-	return [1, 20, Math.floor(1000), ethers.constants.AddressZero, 2 + idx, 2 * 30 * 24 * 3600]
+	return [1, 20, Math.floor(Date.now() / 1000), ethers.constants.AddressZero, 2 + idx, 2 * 30 * 24 * 3600]
 })
 
 const encoded = data.map((data) =>
@@ -15,7 +15,7 @@ const summation = (a: string, b: string): string => ethers.BigNumber.from(a).add
 const tree = new MerkleTree({ leafValues: encoded, hashing, summation })
 
 console.log('depth:', tree.depth())
-// console.log(`tree:\n${tree.postOrderNodes.map((levels) => levels.map((node) => node.position).join(', ')).join('\n')}`)
+
 for (let index = 0; index < encoded.length; index++) {
 	const leafToProve = encoded[index]
 	const proof = tree.getInclusionProof(leafToProve)
@@ -24,7 +24,7 @@ for (let index = 0; index < encoded.length; index++) {
 	for (let idx = 0; idx < proof.length; idx += 1) {
 		updatedRoot = hashing(summation(updatedRoot, proof[idx].hash))
 	}
-	console.log('index:', index)
+	assert.equal(tree.depth(), proof.length + 1, 'Proof length must be equal to the depth of the tree')
 
 	assert.equal(tree.root().hash, updatedRoot)
 }
