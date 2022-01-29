@@ -82,13 +82,16 @@ export class MerkleNode<T> {
 		}
 	}
 }
-
 export class MerkleTree<T> {
 	leaves: MerkleNode<T>[]
 	postOrderNodes: MerkleNode<T>[][] = []
 	hashing: HashingType<T>
 	summation: SummationType<T>
 
+	/**
+	 * Order of leafValues is extremely important.
+	 * It is better to pass sorted values.
+	 */
 	constructor({
 		leafValues,
 		hashing,
