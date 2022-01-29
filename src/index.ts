@@ -12,9 +12,8 @@ const encoded = data.map((data) =>
 
 const hashing = (a: string): string => ethers.utils.keccak256(a)
 const summation = (a: string, b: string): string => ethers.BigNumber.from(a).add(b).toHexString()
-const tree = new MerkleTree({ leafValues: encoded, hashing, summation })
 
-console.log('depth:', tree.depth())
+const tree = new MerkleTree({ leafValues: encoded, hashing, summation })
 
 for (let index = 0; index < encoded.length; index++) {
 	const leafToProve = encoded[index]
