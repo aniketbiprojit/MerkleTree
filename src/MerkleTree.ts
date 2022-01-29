@@ -1,13 +1,7 @@
 import assert from 'assert'
-import 'reflect-metadata'
 
 type HashingType<T> = (a: T) => T
 type SummationType<T> = (a: T, b: T) => T
-
-class MerkleSetupValues {
-	static hashing: HashingType<any>
-	static summation: SummationType<any>
-}
 
 export type MerkleLeafConstructor<T> = {
 	left?: MerkleNode<T>
@@ -30,12 +24,16 @@ export class MerkleNode<T> {
 		value,
 		position,
 		hash,
+		hashing,
+		summation,
 	}: {
 		left: MerkleNode<T> | null
 		right: MerkleNode<T> | null
 		value?: T
 		position: number
 		hash?: boolean
+		hashing: HashingType<T>
+		summation: SummationType<T>
 	}) {
 		if (left === null && right === null) {
 			assert(value !== undefined, 'Value must be defined as it is a leaf')
@@ -52,10 +50,10 @@ export class MerkleNode<T> {
 			/**
 			 * left and right are not null, so we can calculate the hash
 			 */
-			this.value = MerkleSetupValues.summation(left!.hash, right!.hash)
+			this.value = summation(left!.hash, right!.hash)
 		}
 		if (hash !== false) {
-			this.hash = MerkleSetupValues.hashing(this.value)
+			this.hash = hashing(this.value)
 		} else {
 			this.hash = this.value
 		}
@@ -88,6 +86,8 @@ export class MerkleNode<T> {
 export class MerkleTree<T> {
 	leaves: MerkleNode<T>[]
 	postOrderNodes: MerkleNode<T>[][] = []
+	hashing: HashingType<T>
+	summation: SummationType<T>
 
 	constructor({
 		leafValues,
@@ -100,8 +100,8 @@ export class MerkleTree<T> {
 		summation: SummationType<T>
 		hashLeaves?: boolean
 	}) {
-		MerkleSetupValues.hashing = hashing
-		MerkleSetupValues.summation = summation
+		this.hashing = hashing
+		this.summation = summation
 
 		leafValues = Array.from(new Set(leafValues))
 		if (leafValues.length % 2 !== 0) {
@@ -109,7 +109,8 @@ export class MerkleTree<T> {
 		}
 
 		this.leaves = leafValues.map(
-			(value, idx) => new MerkleNode({ left: null, right: null, value, position: idx, hash: hashLeaves })
+			(value, idx) =>
+				new MerkleNode({ left: null, right: null, value, position: idx, hash: hashLeaves, hashing, summation })
 		)
 		this.postOrderNodes.push(this.leaves)
 		this.buildMerkleTree()
@@ -133,6 +134,8 @@ export class MerkleTree<T> {
 					left,
 					right,
 					position: counter++,
+					hashing: this.hashing,
+					summation: this.summation,
 				})
 
 				left.setParent(parentNode)
