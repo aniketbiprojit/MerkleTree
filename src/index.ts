@@ -27,3 +27,5 @@ for (let index = 0; index < encoded.length; index++) {
 
 	assert.equal(tree.root().hash, updatedRoot)
 }
+
+export * from './MerkleTree'
