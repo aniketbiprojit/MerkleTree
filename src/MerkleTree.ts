@@ -50,7 +50,10 @@ export class MerkleNode<T> {
 			/**
 			 * left and right are not null, so we can calculate the hash
 			 */
-			this.value = summation(left!.hash, right!.hash)
+			if (left.position <= right.position) this.value = summation(left!.hash, right!.hash)
+			else {
+				this.value = summation(right!.hash, left!.hash)
+			}
 		}
 		if (hash !== false) {
 			this.hash = hashing(this.value)
@@ -177,7 +180,6 @@ export class MerkleTree<T> {
 		if (leaf) {
 			// const leafIndex = this.leaves.indexOf(leaf)
 			const root = this.root()
-
 			const branch = []
 			const proof = []
 			let testElement = leaf
@@ -189,6 +191,7 @@ export class MerkleTree<T> {
 					proof.push(otherNode)
 				}
 				testElement = testElement.parent!
+				console.log(testElement.hash)
 			}
 
 			return proof
